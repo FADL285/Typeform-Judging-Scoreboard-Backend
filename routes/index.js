@@ -1,31 +1,14 @@
 import { Router } from 'express';
-import {
-  getAllFormsResponses,
-  getFormResponsesById,
-  getFormsIdentifiers
-} from '../handlers/index.js';
+import { getAllFormsDetails, getFormResponsesById } from '../handlers/index.js';
 
 const router = Router();
 
 router.get('/', async (req, res, next) => {
   // Get forms identifiers
   try {
-    const formsIdentifiers = await getFormsIdentifiers();
+    const formsIdentifiers = await getAllFormsDetails();
     res.json({
       data: formsIdentifiers,
-      statusCode: 200
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Get all forms responses
-router.get('/all', async (req, res, next) => {
-  try {
-    const formsResponses = await getAllFormsResponses();
-    res.json({
-      data: formsResponses,
       statusCode: 200
     });
   } catch (error) {

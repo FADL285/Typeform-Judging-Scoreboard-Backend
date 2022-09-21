@@ -39,14 +39,19 @@ const getTeamsNames = (form) => {
 
 // Set form rating questions - question id, title and max rating
 const setRatingQuestions = (form) => {
-  form.fields.forEach((field) => {
-    if (field.type === 'rating') {
-      ratingQuestions[field.id] = {
-        title: field.title,
-        maxRating: field.properties.steps
-      };
-    }
-  });
+  const ratingQuestionsGroup = form.fields.find(
+    (field) => field.type === 'group'
+  );
+  if (ratingQuestionsGroup) {
+    ratingQuestionsGroup.properties.fields.forEach((question) => {
+      if (question.type === 'rating') {
+        ratingQuestions[question.id] = {
+          title: question.title,
+          maxRating: question.properties.steps
+        };
+      }
+    });
+  }
 };
 
 // Get form responses and save each response to it's team
@@ -82,6 +87,7 @@ const getFormDetails = async (formId) => {
   const form = await typeformAPI.forms.get({ uid: formId });
   // handle form not found
   responsesData[formId] = {
+    id: formId,
     title: form.title,
     teams: getTeamsNames(form)
   };
@@ -93,17 +99,27 @@ const getFormDetails = async (formId) => {
   return responsesData[formId];
 };
 
-// Return Forms Identifiers
-const getFormsIdentifiers = async () => {
-  await getForms();
-  return formsIdentifiers;
+const getFormPref = async (formId) => {
+  const form = await typeformAPI.forms.get({ uid: formId });
+  // handle form not found
+  responsesData[formId] = {
+    id: formId,
+    title: form.title,
+    teams: getTeamsNames(form)
+  };
+
+  // setRatingQuestions(form);
+
+  // await getFormResponses(formId);
+
+  return responsesData[formId];
 };
 
 // Return All responses data
-const getAllFormsResponses = async () => {
+const getAllFormsDetails = async () => {
   const formsIds = await getForms();
   const responses = await Promise.all(
-    formsIds.map((formId) => getFormDetails(formId))
+    formsIds.map((formId) => getFormPref(formId))
   );
   return responses;
 };
@@ -114,4 +130,4 @@ const getFormResponsesById = async (formId) => {
   return form;
 };
 
-export { getAllFormsResponses, getFormResponsesById, getFormsIdentifiers };
+export { getAllFormsDetails, getFormResponsesById, getFormPref };
