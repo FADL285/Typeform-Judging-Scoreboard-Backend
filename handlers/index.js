@@ -81,10 +81,6 @@ const getFormResponses = async (formId) => {
 const getFormDetails = async (formId) => {
   const form = await typeformAPI.forms.get({ uid: formId });
   // handle form not found
-  if (form?.code === 'FORM_NOT_FOUND') {
-    return null;
-  }
-
   responsesData[formId] = {
     title: form.title,
     teams: getTeamsNames(form)

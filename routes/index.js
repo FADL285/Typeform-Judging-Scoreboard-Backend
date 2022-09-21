@@ -26,13 +26,20 @@ router.get('/all', async (req, res) => {
 });
 
 // Get form responses by id
-router.get('/:formId', async (req, res) => {
-  const { formId } = req.params;
-  const formResponses = await getFormResponsesById(formId);
-  res.json({
-    data: formResponses,
-    statusCode: 200
-  });
+router.get('/:formId', async (req, res, next) => {
+  try {
+    const { formId } = req.params;
+    const formResponses = await getFormResponsesById(formId);
+    res.json({
+      data: formResponses,
+      statusCode: 200
+    });
+  } catch (error) {
+    res.json({
+      statusCode: 404,
+      message: 'Form not found'
+    });
+  }
 });
 
 // 404 Page Not Found
