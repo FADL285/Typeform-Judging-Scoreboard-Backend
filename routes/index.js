@@ -7,7 +7,7 @@ import {
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   // Get forms identifiers
   try {
     const formsIdentifiers = await getFormsIdentifiers();
@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get all forms responses
-router.get('/all', async (req, res) => {
+router.get('/all', async (req, res, next) => {
   try {
     const formsResponses = await getAllFormsResponses();
     res.json({
