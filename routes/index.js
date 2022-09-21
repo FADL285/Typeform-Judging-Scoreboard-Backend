@@ -9,20 +9,28 @@ const router = Router();
 
 router.get('/', async (req, res) => {
   // Get forms identifiers
-  const formsIdentifiers = await getFormsIdentifiers();
-  res.json({
-    data: formsIdentifiers,
-    statusCode: 200
-  });
+  try {
+    const formsIdentifiers = await getFormsIdentifiers();
+    res.json({
+      data: formsIdentifiers,
+      statusCode: 200
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // Get all forms responses
 router.get('/all', async (req, res) => {
-  const formsResponses = await getAllFormsResponses();
-  res.json({
-    data: formsResponses,
-    statusCode: 200
-  });
+  try {
+    const formsResponses = await getAllFormsResponses();
+    res.json({
+      data: formsResponses,
+      statusCode: 200
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // Get form responses by id
