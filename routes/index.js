@@ -1,11 +1,38 @@
 import { Router } from 'express';
-import getResponse from '../controllers/index.js';
+import {
+  getAllFormsResponses,
+  getFormResponsesById,
+  getFormsIdentifiers
+} from '../handlers/index.js';
 
 const router = Router();
 
 router.get('/', async (req, res) => {
-  const response = await getResponse();
-  res.send(response);
+  // Get forms identifiers
+  const formsIdentifiers = await getFormsIdentifiers();
+  res.json({
+    data: formsIdentifiers,
+    statusCode: 200
+  });
+});
+
+// Get all forms responses
+router.get('/all', async (req, res) => {
+  const formsResponses = await getAllFormsResponses();
+  res.json({
+    data: formsResponses,
+    statusCode: 200
+  });
+});
+
+// Get form responses by id
+router.get('/:formId', async (req, res) => {
+  const { formId } = req.params;
+  const formResponses = await getFormResponsesById(formId);
+  res.json({
+    data: formResponses,
+    statusCode: 200
+  });
 });
 
 // 404 Page Not Found

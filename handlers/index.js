@@ -5,18 +5,21 @@ dotenv.config();
 
 const responsesData = {};
 const ratingQuestions = {};
+const formsIdentifiers = {};
 
 const typeformAPI = createClient({
   token: process.env.TYPEFORM_PERSONAL_TOKEN
 });
 
-// Get Forms IDs
+// Get Forms IDs from forms Identifiers if exist, else get from typeform
 const getForms = async () => {
-  const forms = await typeformAPI.forms.list();
-  return forms.items.reduce((ids, form) => {
-    ids.push(form.id);
-    return ids;
-  }, []);
+  if (Object.keys(formsIdentifiers).length === 0) {
+    const forms = await typeformAPI.forms.list();
+    forms.items.forEach((form) => {
+      formsIdentifiers[form.id] = form.title;
+    });
+  }
+  return Object.keys(formsIdentifiers);
 };
 
 // Get Teams Names from form question.
@@ -77,6 +80,11 @@ const getFormResponses = async (formId) => {
 // Get Details from form ID
 const getFormDetails = async (formId) => {
   const form = await typeformAPI.forms.get({ uid: formId });
+  // handle form not found
+  if (form?.code === 'FORM_NOT_FOUND') {
+    return null;
+  }
+
   responsesData[formId] = {
     title: form.title,
     teams: getTeamsNames(form)
@@ -89,8 +97,14 @@ const getFormDetails = async (formId) => {
   return responsesData[formId];
 };
 
-// Return responses data
-const getResponsesData = async () => {
+// Return Forms Identifiers
+const getFormsIdentifiers = async () => {
+  await getForms();
+  return formsIdentifiers;
+};
+
+// Return All responses data
+const getAllFormsResponses = async () => {
   const formsIds = await getForms();
   const responses = await Promise.all(
     formsIds.map((formId) => getFormDetails(formId))
@@ -98,4 +112,10 @@ const getResponsesData = async () => {
   return responses;
 };
 
-export default getResponsesData;
+// Get All Responses for specific form
+const getFormResponsesById = async (formId) => {
+  const form = await getFormDetails(formId);
+  return form;
+};
+
+export { getAllFormsResponses, getFormResponsesById, getFormsIdentifiers };
