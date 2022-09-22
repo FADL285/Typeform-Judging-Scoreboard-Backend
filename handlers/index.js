@@ -29,12 +29,13 @@ const getTeamsNames = (form) => {
       field.type === 'picture_choice' || field.type === 'multiple_choice'
   );
   return teams.properties.choices.reduce((teams, team) => {
-    teams[team.id] = {
+    teams.push({
+      id: team.id,
       title: team.label,
       image: team?.attachment?.href
-    };
+    });
     return teams;
-  }, {});
+  }, []);
 };
 
 // Set form rating questions - question id, title and max rating
@@ -64,9 +65,11 @@ const getFormResponses = async (formId) => {
   responses.items.forEach((response) => {
     const teamId = response.answers[0].choice?.id;
     if (teamId) {
-      responsesData[formId].teams[teamId].responses =
-        responsesData[formId].teams[teamId].responses || [];
-      responsesData[formId].teams[teamId].responses.push({
+      const team = responsesData[formId].teams.find(
+        (team) => team.id === teamId
+      );
+      team.responses = team.responses || [];
+      team.responses.push({
         // return question id and title, rating answer and max rating
         judge: response.hidden?.judge,
         answers: response.answers
