@@ -4,8 +4,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const responsesData = {};
-const ratingQuestions = {};
 const formsIdentifiers = {};
+let ratingQuestions = {};
 
 const typeformAPI = createClient({
   token: process.env.TYPEFORM_PERSONAL_TOKEN
@@ -40,6 +40,7 @@ const getTeamsNames = (form) => {
 
 // Set form rating questions - question id, title and max rating
 const setRatingQuestions = (form) => {
+  ratingQuestions = {};
   const ratingQuestionsGroup = form.fields.find(
     (field) => field.type === 'group'
   );
@@ -53,6 +54,8 @@ const setRatingQuestions = (form) => {
       }
     });
   }
+
+  return ratingQuestions;
 };
 
 // Get form responses and save each response to it's team
@@ -76,9 +79,7 @@ const getFormResponses = async (formId) => {
           .filter((answer) => answer.field.type === 'rating')
           .map((answer) => ({
             id: answer.field.id,
-            title: ratingQuestions[answer.field.id].title,
-            rating: answer.number,
-            maxRating: ratingQuestions[answer.field.id].maxRating
+            rating: answer.number
           }))
       });
     }
@@ -92,7 +93,8 @@ const getFormDetails = async (formId) => {
   responsesData[formId] = {
     id: formId,
     title: form.title,
-    teams: getTeamsNames(form)
+    teams: getTeamsNames(form),
+    ratingQuestions: setRatingQuestions(form)
   };
 
   setRatingQuestions(form);
@@ -110,10 +112,6 @@ const getFormPref = async (formId) => {
     title: form.title,
     teams: getTeamsNames(form)
   };
-
-  // setRatingQuestions(form);
-
-  // await getFormResponses(formId);
 
   return responsesData[formId];
 };
