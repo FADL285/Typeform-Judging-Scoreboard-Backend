@@ -41,19 +41,21 @@ const getTeamsNames = (form) => {
 // Set form rating questions - question id, title and max rating
 const setRatingQuestions = (form) => {
   ratingQuestions = {};
-  const ratingQuestionsGroup = form.fields.find(
-    (field) => field.type === 'group'
-  );
-  if (ratingQuestionsGroup) {
-    ratingQuestionsGroup.properties.fields.forEach((question) => {
-      if (question.type === 'rating') {
-        ratingQuestions[question.id] = {
-          title: question.title,
-          maxRating: question.properties.steps
-        };
-      }
+
+  // Get all Groups fields and loop on it
+  const groups = form.fields.filter((field) => field.type === 'group');
+  groups.forEach((group) => {
+    // Get all rating fields and loop on it
+    const ratings = group.properties.fields.filter(
+      (field) => field.type === 'rating'
+    );
+    ratings.forEach((rating) => {
+      ratingQuestions[rating.id] = {
+        title: rating.title,
+        max: rating?.properties?.steps
+      };
     });
-  }
+  });
 
   return ratingQuestions;
 };
