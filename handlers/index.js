@@ -5,7 +5,7 @@ dotenv.config();
 
 const responsesData = {};
 const formsIdentifiers = {};
-let ratingQuestions = {};
+let ratingQuestions = [];
 
 const typeformAPI = createClient({
   token: process.env.TYPEFORM_PERSONAL_TOKEN
@@ -40,7 +40,7 @@ const getTeamsNames = (form) => {
 
 // Set form rating questions - question id, title and max rating
 const setRatingQuestions = (form) => {
-  ratingQuestions = {};
+  ratingQuestions = [];
 
   // Get all Groups fields and loop on it
   const groups = form.fields.filter((field) => field.type === 'group');
@@ -50,10 +50,11 @@ const setRatingQuestions = (form) => {
       (field) => field.type === 'rating'
     );
     ratings.forEach((rating) => {
-      ratingQuestions[rating.id] = {
+      ratingQuestions.push({
+        id: rating.id,
         title: rating.title,
         max: rating?.properties?.steps
-      };
+      });
     });
   });
 
