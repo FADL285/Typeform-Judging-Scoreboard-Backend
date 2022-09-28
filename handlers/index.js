@@ -69,7 +69,8 @@ const getFormResponses = async (formId) => {
   });
 
   responses.items.forEach((response) => {
-    const teamId = response.answers[0].choice?.id;
+    const teamId = response.answers.find((answer) => answer.type === 'choice')
+      ?.choice?.id;
     if (teamId) {
       const team = responsesData[formId].teams.find(
         (team) => team.id === teamId
@@ -97,7 +98,8 @@ const getFormDetails = async (formId) => {
     id: formId,
     title: form.title,
     teams: getTeamsNames(form),
-    ratingQuestions: setRatingQuestions(form)
+    ratingQuestions: setRatingQuestions(form),
+    variables: form.variables
   };
 
   setRatingQuestions(form);
@@ -113,7 +115,8 @@ const getFormPref = async (formId) => {
   responsesData[formId] = {
     id: formId,
     title: form.title,
-    teams: getTeamsNames(form)
+    teams: getTeamsNames(form),
+    variables: form.variables
   };
 
   return responsesData[formId];
