@@ -31,8 +31,7 @@ const getTeamsNames = (form) => {
   return teams.properties.choices.reduce((teams, team) => {
     teams.push({
       id: team.id,
-      title: team.label,
-      image: team?.attachment?.href
+      title: team.label
     });
     return teams;
   }, []);
