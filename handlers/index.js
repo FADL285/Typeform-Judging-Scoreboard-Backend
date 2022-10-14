@@ -14,7 +14,10 @@ const typeformAPI = createClient({
 // Get Forms IDs from forms Identifiers if exist, else get from typeform
 const getForms = async () => {
   if (Object.keys(formsIdentifiers).length === 0) {
-    const forms = await typeformAPI.forms.list();
+    const forms = await typeformAPI.forms.list({
+      pageSize: 100,
+      workspaceId: process.env.TYPEFORM_WORKSPACE_ID
+    });
     forms.items.forEach((form) => {
       formsIdentifiers[form.id] = form.title;
     });
@@ -108,6 +111,7 @@ const getFormDetails = async (formId) => {
   return responsesData[formId];
 };
 
+// Get Form Pref
 const getFormPref = async (formId) => {
   const form = await typeformAPI.forms.get({ uid: formId });
   // handle form not found

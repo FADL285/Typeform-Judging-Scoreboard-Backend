@@ -9,7 +9,8 @@ const app = express();
 // Welcome Response
 app.get('/', (req, res) => {
   res.json({
-    message: 'Welcome to IEEE Vectors Contest API',
+    message:
+      'Welcome to Typeform Judging Board System API, Created by Mohamed Fadl <Mohamed.Fadl2852@gmail.com>',
     statusCode: 200
   });
 });
@@ -31,6 +32,7 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     message: 'Oops! Something went wrong, Try again later',
+    error: err.message,
     statusCode: 500
   });
 });
