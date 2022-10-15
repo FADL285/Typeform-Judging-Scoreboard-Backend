@@ -1,7 +1,7 @@
 {
-  "name": "typeform-judging-score-board",
+  "name": "typeform-judging-scoreboard",
   "version": "1.0.0",
-  "description": "Fetch responses from Typeform and display it in a score board - it fetch workspace forms and set each form as card which has Teams (multiple_choice or picture_choice) and display the total rating score.",
+  "description": "Fetch responses from Typeform and display it in a scoreboard - it fetch workspace forms and set each form as card which has Teams (multiple_choice or picture_choice) and display the total rating score.",
   "main": "app.js",
   "type": "module",
   "scripts": {
@@ -10,15 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FADL285/Typeform-Judging-Score-Board-Backend.git"
+    "url": "git+https://github.com/FADL285/Typeform-Judging-Scoreboard-Backend.git"
   },
   "keywords": ["typeform", "judging", "score", "board"],
   "author": "Mohamed Fadl <Mohamed.Fadl2852@gmail.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/FADL285/Typeform-Judging-Score-Board-Backend/issues"
+    "url": "https://github.com/FADL285/Typeform-Judging-Scoreboard-Backend/issues"
   },
-  "homepage": "https://github.com/FADL285/Typeform-Judging-Score-Board-Backend#readme",
+  "homepage": "https://github.com/FADL285/Typeform-Judging-Scoreboard-Backend#readme",
   "dependencies": {
     "@typeform/api-client": "^1.7.0",
     "cors": "^2.8.5",
