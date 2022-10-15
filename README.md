@@ -1,6 +1,8 @@
-# Typeform - Judging Score Board - Back-End
-
-Fetch responses from Typeform and display it in a score board - it fetch workspace forms and set each form as card which has Teams (multiple_choice or picture_choice) and display the total rating score.
+<div align="center">
+    <h1>Typeform - Judging Scoreboard - Back-End</h1>
+    <img src="https://user-images.githubusercontent.com/53804570/196001680-ce93ed21-9302-483f-a6f6-9b5ea1ea444f.gif" alt="Logo" />
+    <p>Fetch responses from Typeform and display it in a score board - it fetch workspace forms and set each form as card which has Teams (multiple_choice or picture_choice) and display the total rating score.</p>
+</div>
 
 ## What the application covers?
 
