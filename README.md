@@ -19,7 +19,9 @@
 | `choose a team`   | `multiple_choice` or `picture_choice` |
 | `rating question` | `rating`                              |
 
-> This is a [demo team evaluation form](<(https://form.typeform.com/to/A9z6bGlu#judge=Mohamed%20Fadl)>), take a look at it.## Requirements to run it locally
+> This is a [demo team evaluation form](https://form.typeform.com/to/A9z6bGlu#judge=Mohamed%20Fadl), take a look at it.
+
+## Requirements to run it locally
 
 - [Node.js](https://nodejs.org/en/)
 
