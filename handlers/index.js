@@ -2,7 +2,15 @@ import { createClient } from '@typeform/api-client';
 import dotenv from 'dotenv';
 dotenv.config();
 
+export function validateTypeformConfig(env) {
+  const token = env.TYPEFORM_PERSONAL_TOKEN?.trim();
+  const workspaceId = env.TYPEFORM_WORKSPACE_ID?.trim();
+  if (!token || !workspaceId) throw new Error('TYPEFORM_PERSONAL_TOKEN and TYPEFORM_WORKSPACE_ID are required');
+  return { token, workspaceId };
+}
+
 export function createHandlers(api, workspaceId, now = Date.now) {
+  if (typeof workspaceId !== 'string' || !workspaceId.trim()) throw new Error('A Typeform workspace ID is required');
   let formsCache;
   let cachedAt = 0;
   async function getForms() {
@@ -39,7 +47,7 @@ export function createHandlers(api, workspaceId, now = Date.now) {
   async function getFormResponsesById(formId) {
     // Only expose forms from the configured workspace, even with a broad Typeform token.
     const forms = await getForms();
-    if (!forms.some(form => form.id === formId)) throw new Error('Form not found');
+    if (!forms.some(form => form.id === formId)) throw Object.assign(new Error('Form not found'), { statusCode: 404 });
     const form = await api.forms.get({ uid: formId });
     const result = { ...metadata(form), ratingQuestions: ratingQuestions(form.fields) };
     const teams = new Map(result.teams.map(team => [team.id, team]));
@@ -74,6 +82,13 @@ export function createHandlers(api, workspaceId, now = Date.now) {
   return { getAllFormsDetails, getFormResponsesById };
 }
 
-const api = createClient({ token: process.env.TYPEFORM_PERSONAL_TOKEN });
-const { getAllFormsDetails, getFormResponsesById } = createHandlers(api, process.env.TYPEFORM_WORKSPACE_ID);
-export { getAllFormsDetails, getFormResponsesById };
+let productionHandlers;
+function getProductionHandlers() {
+  if (!productionHandlers) {
+    const { token, workspaceId } = validateTypeformConfig(process.env);
+    productionHandlers = createHandlers(createClient({ token }), workspaceId);
+  }
+  return productionHandlers;
+}
+export const getAllFormsDetails = (...args) => getProductionHandlers().getAllFormsDetails(...args);
+export const getFormResponsesById = (...args) => getProductionHandlers().getFormResponsesById(...args);

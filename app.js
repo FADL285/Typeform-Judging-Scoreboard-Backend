@@ -3,6 +3,8 @@ import { createAuth } from './auth.js';
 import express from 'express';
 import cors from 'cors';
 import routes from './routes/index.js';
+import { validateTypeformConfig } from './handlers/index.js';
+validateTypeformConfig(process.env);
 
 const PORT = process.env.PORT || 3000;
 
@@ -41,7 +43,6 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     message: 'Oops! Something went wrong, Try again later',
-    error: err.message,
     statusCode: 500
   });
 });

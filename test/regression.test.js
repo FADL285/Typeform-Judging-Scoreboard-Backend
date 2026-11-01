@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createAuth } from '../auth.js';
-import { createHandlers } from '../handlers/index.js';
+import { createHandlers, validateTypeformConfig } from '../handlers/index.js';
 
 const config = { username: 'admin', password: 'private-test-password', secret: 'test-session-secret-of-at-least-32-characters' };
 const response = () => ({ code: 200, data: null, status(code) { this.code = code; return this; }, json(data) { this.data = data; return this; }, set() { return this; } });
@@ -58,4 +58,12 @@ test('form metadata list fetches all pages', async () => {
   } };
   const result = await createHandlers(api, 'workspace').getAllFormsDetails();
   assert.equal(result.length, 101); assert.deepEqual(calls, [1, 2]);
+});
+
+test('Typeform token and workspace scope are mandatory before client access', () => {
+  assert.throws(() => validateTypeformConfig({}));
+  assert.throws(() => validateTypeformConfig({ TYPEFORM_PERSONAL_TOKEN: 'token' }));
+  assert.throws(() => validateTypeformConfig({ TYPEFORM_PERSONAL_TOKEN: 'token', TYPEFORM_WORKSPACE_ID: '  ' }));
+  assert.throws(() => createHandlers({}, undefined));
+  assert.deepEqual(validateTypeformConfig({ TYPEFORM_PERSONAL_TOKEN: ' token ', TYPEFORM_WORKSPACE_ID: ' workspace ' }), { token: 'token', workspaceId: 'workspace' });
 });
