@@ -1,3 +1,5 @@
+import 'dotenv/config';
+import { createAuth } from './auth.js';
 import express from 'express';
 import cors from 'cors';
 import routes from './routes/index.js';
@@ -16,7 +18,14 @@ app.get('/', (req, res) => {
 });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '4kb' }));
+const auth = createAuth({
+  username: process.env.SCOREBOARD_USER,
+  password: process.env.SCOREBOARD_PASSWORD,
+  secret: process.env.SCOREBOARD_SESSION_SECRET,
+});
+app.post('/api/auth', auth.login);
+app.use('/api', auth.requireAuth);
 app.use('/api', routes);
 
 // 404 Page Not Found

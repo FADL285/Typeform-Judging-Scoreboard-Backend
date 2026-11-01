@@ -6,13 +6,19 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon app.js",
-    "start": "node app.js"
+    "start": "node app.js",
+    "test": "node --test test/*.test.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/FADL285/Typeform-Judging-Scoreboard-Backend.git"
   },
-  "keywords": ["typeform", "judging", "score", "board"],
+  "keywords": [
+    "typeform",
+    "judging",
+    "score",
+    "board"
+  ],
   "author": "Mohamed Fadl <Mohamed.Fadl2852@gmail.com>",
   "license": "ISC",
   "bugs": {
