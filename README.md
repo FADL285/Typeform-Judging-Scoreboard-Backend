@@ -280,3 +280,7 @@ All `/api` routes require a server-signed bearer session token. Configure `SCORE
 The paired frontend must be updated together. Remove all `VITE_AUTH_*` deployment variables: frontend environment variables are public build configuration. Existing shared passwords exposed by old client builds must be replaced before deployment. This is a single shared scoreboard login, not individual judge accounts. Login throttling is per process/IP; deployments with multiple processes need a shared limiter or edge control.
 
 Form metadata is cached for five minutes; paginated form lists and response pages are fully fetched. Each request builds its own response data to prevent concurrent form requests from overwriting each other.
+
+For reverse-proxy deployments, set optional `SCOREBOARD_TRUST_PROXY` to an explicit comma-separated list of trusted proxy IPs/CIDRs that matches the actual network topology (for example `127.0.0.1/32` only for a local proxy). Trust is disabled by default; never trust arbitrary forwarding headers or use blanket `true`. Configure the proxy to overwrite client forwarding headers.
+
+The first multiple_choice/picture_choice question in form metadata remains the configured team selector; response answers are matched to that exact question ID, not their response ordering.

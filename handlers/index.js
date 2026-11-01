@@ -27,12 +27,13 @@ export function createHandlers(api, workspaceId, now = Date.now) {
   }
   function metadata(form) {
     const choice = form.fields.find(field => ['multiple_choice', 'picture_choice'].includes(field.type));
-    if (!choice?.properties?.choices) throw new Error('Form has no team-choice question');
+    if (!choice?.id || !choice?.properties?.choices) throw new Error('Form has no team-choice question');
     return {
       id: form.id,
       title: form.title,
       teams: choice.properties.choices.map(team => ({ id: team.id, title: team.label })),
       variables: form.variables,
+      teamFieldId: choice.id,
     };
   }
   function ratingQuestions(fields) {
@@ -60,7 +61,7 @@ export function createHandlers(api, workspaceId, now = Date.now) {
         const key = response.token || response.response_id;
         if (key && responseIds.has(key)) continue;
         if (key) responseIds.add(key);
-        const teamId = response.answers?.find(answer => answer.type === 'choice')?.choice?.id;
+        const teamId = response.answers?.find(answer => answer.type === 'choice' && answer.field?.id === result.teamFieldId)?.choice?.id;
         const team = teams.get(teamId);
         if (!team) continue;
         team.responses ??= [];

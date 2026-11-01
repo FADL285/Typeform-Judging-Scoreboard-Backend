@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { createAuth } from './auth.js';
+import { trustedProxies } from './proxy-config.js';
 import express from 'express';
 import cors from 'cors';
 import routes from './routes/index.js';
@@ -9,6 +10,7 @@ validateTypeformConfig(process.env);
 const PORT = process.env.PORT || 3000;
 
 const app = express();
+app.set('trust proxy', trustedProxies(process.env.SCOREBOARD_TRUST_PROXY));
 
 // Welcome Response
 app.get('/', (req, res) => {

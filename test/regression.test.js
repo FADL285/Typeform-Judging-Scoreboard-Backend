@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { trustedProxies } from '../proxy-config.js';
 import { createAuth } from '../auth.js';
 import { createHandlers, validateTypeformConfig } from '../handlers/index.js';
 
@@ -28,7 +29,7 @@ test('login attempts are bounded', () => {
   assert.equal(blocked.code, 429);
 });
 const form = id => ({ id, title: id, fields: [
-  { type: 'multiple_choice', properties: { choices: [{ id: id + '-team', label: 'Team' }] } },
+  { id: 'team-question', type: 'multiple_choice', properties: { choices: [{ id: id + '-team', label: 'Team' }] } },
   { type: 'rating', id: 'score', title: 'Impact', properties: { steps: 10 } },
 ] });
 test('response pagination and concurrent requests retain their own data', async () => {
@@ -39,7 +40,8 @@ test('response pagination and concurrent requests retain their own data', async 
       calls.push({ uid, before }); await new Promise(resolve => setImmediate(resolve));
       const count = before ? 1 : 750;
       return { items: Array.from({ length: count }, (_, i) => ({ token: `${uid}-${before ? 750 : i}`, answers: [
-        { type: 'choice', choice: { id: uid + '-team' } }, { field: { type: 'rating', id: 'score' }, number: 8 },
+        { type: 'choice', field: { id: 'unrelated-consent' }, choice: { id: 'yes' } },
+        { type: 'choice', field: { id: 'team-question' }, choice: { id: uid + '-team' } }, { field: { type: 'rating', id: 'score' }, number: 8 },
       ] })) };
     } },
   };
@@ -66,4 +68,10 @@ test('Typeform token and workspace scope are mandatory before client access', ()
   assert.throws(() => validateTypeformConfig({ TYPEFORM_PERSONAL_TOKEN: 'token', TYPEFORM_WORKSPACE_ID: '  ' }));
   assert.throws(() => createHandlers({}, undefined));
   assert.deepEqual(validateTypeformConfig({ TYPEFORM_PERSONAL_TOKEN: ' token ', TYPEFORM_WORKSPACE_ID: ' workspace ' }), { token: 'token', workspaceId: 'workspace' });
+});
+
+test('proxy trust is disabled by default and accepts only explicit IP/CIDR configuration', () => {
+  assert.equal(trustedProxies(undefined), false);
+  assert.deepEqual(trustedProxies('127.0.0.1/32,::1/128'), ['127.0.0.1/32', '::1/128']);
+  for (const value of ['true', '*', '1', '127.0.0.1/999', '0.0.0.0/0', '::/0']) assert.throws(() => trustedProxies(value));
 });
