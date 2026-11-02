@@ -38,6 +38,7 @@ test('response pagination and concurrent requests retain their own data', async 
     forms: { list: async () => ({ items: [{ id: 'a' }, { id: 'b' }] }), get: async ({ uid }) => form(uid) },
     responses: { list: async ({ uid, before }) => {
       calls.push({ uid, before }); await new Promise(resolve => setImmediate(resolve));
+      if (before) assert.equal(before, `${uid}-749`);
       const count = before ? 1 : 750;
       return { items: Array.from({ length: count }, (_, i) => ({ token: `${uid}-${before ? 750 : i}`, answers: [
         { type: 'choice', field: { id: 'unrelated-consent' }, choice: { id: 'yes' } },
@@ -45,7 +46,7 @@ test('response pagination and concurrent requests retain their own data', async 
       ] })) };
     } },
   };
-  const handlers = createHandlers(api, 'workspace');
+  const handlers = createHandlers(api, 'workspace', Date.now, { intervalMs: 0 });
   const [a, b] = await Promise.all([handlers.getFormResponsesById('a'), handlers.getFormResponsesById('b')]);
   assert.equal(a.id, 'a'); assert.equal(b.id, 'b');
   assert.equal(a.teams[0].responses.length, 751); assert.equal(b.teams[0].responses.length, 751);
@@ -58,7 +59,7 @@ test('form metadata list fetches all pages', async () => {
     list: async ({ page }) => { calls.push(page); return { page_count: 2, items: Array.from({ length: page === 1 ? 100 : 1 }, (_, i) => ({ id: `${page}-${i}` })) }; },
     get: async ({ uid }) => form(uid),
   } };
-  const result = await createHandlers(api, 'workspace').getAllFormsDetails();
+  const result = await createHandlers(api, 'workspace', Date.now, { intervalMs: 0 }).getAllFormsDetails();
   assert.equal(result.length, 101); assert.deepEqual(calls, [1, 2]);
 });
 
@@ -74,4 +75,52 @@ test('proxy trust is disabled by default and accepts only explicit IP/CIDR confi
   assert.equal(trustedProxies(undefined), false);
   assert.deepEqual(trustedProxies('127.0.0.1/32,::1/128'), ['127.0.0.1/32', '::1/128']);
   for (const value of ['true', '*', '1', '127.0.0.1/999', '0.0.0.0/0', '::/0']) assert.throws(() => trustedProxies(value));
+});
+
+test('membership is fresh while cached form details are reused and removed forms are denied', async () => {
+  let member = true; let listCalls = 0; let detailsCalls = 0;
+  const api = { forms: { list: async () => { listCalls++; return { items: member ? [{ id: 'a' }] : [] }; }, get: async () => { detailsCalls++; return form('a'); } }, responses: { list: async () => ({ items: [] }) } };
+  const handlers = createHandlers(api, 'workspace', Date.now, { intervalMs: 0 });
+  await handlers.getFormResponsesById('a'); await handlers.getFormResponsesById('a');
+  assert.equal(listCalls, 2); assert.equal(detailsCalls, 1);
+  member = false;
+  await assert.rejects(handlers.getFormResponsesById('a'), error => error.statusCode === 404);
+  assert.equal(detailsCalls, 1);
+});
+test('cold concurrent requests share membership and metadata refreshes', async () => {
+  let release; let listCalls = 0; let detailsCalls = 0;
+  const gate = new Promise(resolve => { release = resolve; });
+  const api = { forms: { list: async () => { listCalls++; await gate; return { items: [{ id: 'a' }] }; }, get: async () => { detailsCalls++; return form('a'); } } };
+  const handlers = createHandlers(api, 'workspace', Date.now, { intervalMs: 0 });
+  const a = handlers.getAllFormsDetails(); const b = handlers.getAllFormsDetails();
+  await assert.rejects(handlers.getAllFormsDetails(), error => error.statusCode === 429);
+  release(); await Promise.all([a, b]);
+  assert.equal(listCalls, 1); assert.equal(detailsCalls, 1);
+});
+test('stalled upstream calls have deadlines and do not keep aggregation slots occupied', async () => {
+  let stall = true;
+  const api = { forms: { list: () => stall ? new Promise(() => {}) : Promise.resolve({ items: [] }) } };
+  const handlers = createHandlers(api, 'workspace', Date.now, { intervalMs: 0, timeoutMs: 10 });
+  await assert.rejects(handlers.getAllFormsDetails(), error => error.statusCode === 504);
+  stall = false; assert.deepEqual(await handlers.getAllFormsDetails(), []);
+});
+test('response volume and payload bounds fail explicitly without partial rankings', async () => {
+  const api = { forms: { list: async () => ({ items: [{ id: 'a' }] }), get: async () => form('a') }, responses: { list: async () => ({ items: [{ token: 'a' }, { token: 'b' }] }) } };
+  await assert.rejects(createHandlers(api, 'workspace', Date.now, { intervalMs: 0, maxResponses: 1 }).getFormResponsesById('a'), error => error.statusCode === 413);
+  await assert.rejects(createHandlers(api, 'workspace', Date.now, { intervalMs: 0, maxResponseBytes: 1 }).getFormResponsesById('a'), error => error.statusCode === 413);
+});
+test('workspace form limit and metadata fanout are bounded', async () => {
+  let active = 0; let peak = 0;
+  const api = { forms: { list: async () => ({ items: Array.from({ length: 5 }, (_, i) => ({ id: String(i) })) }), get: async ({ uid }) => {
+    active++; peak = Math.max(peak, active); await new Promise(resolve => setImmediate(resolve)); active--; return form(uid);
+  } } };
+  await assert.rejects(createHandlers(api, 'workspace', Date.now, { intervalMs: 0, maxForms: 2 }).getAllFormsDetails(), error => error.statusCode === 413);
+  const result = await createHandlers(api, 'workspace', Date.now, { intervalMs: 0 }).getAllFormsDetails();
+  assert.equal(result.length, 5); assert.ok(peak <= 2);
+});
+test('legacy getFormPref remains available with current workspace authorization', async () => {
+  const api = { forms: { list: async () => ({ items: [{ id: 'a' }] }), get: async () => form('a') } };
+  const handlers = createHandlers(api, 'workspace', Date.now, { intervalMs: 0 });
+  assert.equal((await handlers.getFormPref('a')).id, 'a');
+  await assert.rejects(handlers.getFormPref('outside'), error => error.statusCode === 404);
 });

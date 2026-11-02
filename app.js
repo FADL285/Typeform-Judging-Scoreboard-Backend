@@ -43,9 +43,10 @@ app.use((req, res) =>
 // 500 Internal Server Error
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
-    message: 'Oops! Something went wrong, Try again later',
-    statusCode: 500
+  const status = [413, 429, 503, 504].includes(err.statusCode) ? err.statusCode : 500;
+  res.status(status).json({
+    message: status === 500 ? 'Unable to load scoreboard; try again later' : err.message,
+    statusCode: status
   });
 });
 
