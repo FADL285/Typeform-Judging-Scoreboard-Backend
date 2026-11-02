@@ -272,3 +272,23 @@ You can deploy the application on any hosting services platform
 ## License
 
 [ISC](https://choosealicense.com/licenses/isc/)
+
+## Server-side scoreboard authentication
+
+All `/api` routes require a server-signed bearer session token. Configure `SCOREBOARD_USER`, a private `SCOREBOARD_PASSWORD` of at least 12 characters, and a random `SCOREBOARD_SESSION_SECRET` of at least 32 characters on the backend only. Login via `POST /api/auth` with JSON `{ "username": "...", "password": "..." }`, then send the returned token in `Authorization: Bearer ...`. Tokens expire after eight hours. Rotate the session secret to invalidate all tokens. Use HTTPS.
+
+The paired frontend must be updated together. Remove all `VITE_AUTH_*` deployment variables: frontend environment variables are public build configuration. Existing shared passwords exposed by old client builds must be replaced before deployment. This is a single shared scoreboard login, not individual judge accounts. Login throttling is per process/IP; deployments with multiple processes need a shared limiter or edge control.
+
+Form details are cached for five minutes with an 8MB cache budget; workspace membership is fetched fresh per request and concurrent in-flight list refreshes are coalesced. Each request builds its own response data.
+
+For reverse-proxy deployments, set optional `SCOREBOARD_TRUST_PROXY` to an explicit comma-separated list of trusted proxy IPs/CIDRs that matches the actual network topology (for example `127.0.0.1/32` only for a local proxy). Trust is disabled by default; never trust arbitrary forwarding headers or use blanket `true`. Configure the proxy to overwrite client forwarding headers.
+
+The first multiple_choice/picture_choice question in form metadata remains the configured team selector; response answers are matched to that exact question ID, not their response ordering.
+
+## Supported workload and secure rollout
+
+The scoreboard supports up to 1,000 forms per workspace and 10,000 fetched responses / 8MB response data per form request. It rejects oversized requests explicitly without returning a partial ranking. At most two scoreboard aggregations and two Typeform calls run concurrently per process, with queued calls bounded and starts spaced 500ms apart. Calls have an eight-second deadline; the production SDK also aborts its underlying Axios connection at eight seconds. Rate-limit/upstream errors are surfaced for retry rather than retried in an unbounded loop. Form details larger than 1MB are rejected; metadata caching is bounded to 8MB.
+
+This PR cannot retrofit authentication onto running legacy instances. Before exposing the updated service, put authentication at the edge or drain every old unauthenticated instance and switch frontend/backend together. Do not use a rolling mixed old/new deployment that still routes public traffic to legacy APIs. No deployment is performed by this PR.
+
+The previous `getFormPref` export is retained for compatibility; no in-repository consumer was found. It now applies the same current-workspace authorization before returning metadata.

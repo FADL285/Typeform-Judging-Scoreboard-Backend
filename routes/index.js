@@ -26,11 +26,11 @@ router.get('/:formId', async (req, res, next) => {
       statusCode: 200
     });
   } catch (error) {
-    console.log(error.stack);
-    res.status(404).json({
-      message: 'Form not found :(',
-      statusCode: 404
-    });
+    if (error.statusCode === 404 || error.status === 404) {
+      res.status(404).json({ message: 'Form not found', statusCode: 404 });
+    } else {
+      next(error);
+    }
   }
 });
 
