@@ -124,3 +124,8 @@ test('legacy getFormPref remains available with current workspace authorization'
   assert.equal((await handlers.getFormPref('a')).id, 'a');
   await assert.rejects(handlers.getFormPref('outside'), error => error.statusCode === 404);
 });
+
+test('scoped IPv6 proxy addresses are rejected', () => {
+  assert.throws(() => trustedProxies('fe80::1%eth0'));
+  assert.throws(() => trustedProxies('fe80::1%eth0/64'));
+});

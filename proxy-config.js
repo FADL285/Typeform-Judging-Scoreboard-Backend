@@ -5,7 +5,7 @@ export function trustedProxies(value) {
   for (const entry of entries) {
     const [address, prefix, extra] = entry.split('/');
     const family = isIP(address);
-    if (!family || extra || (prefix !== undefined && (!/^\d+$/.test(prefix) || (Number(prefix) === 0 || Number(prefix) > (family === 4 ? 32 : 128))))) {
+    if (!family || address.includes("%") || extra || (prefix !== undefined && (!/^\d+$/.test(prefix) || (Number(prefix) === 0 || Number(prefix) > (family === 4 ? 32 : 128))))) {
       throw new Error('SCOREBOARD_TRUST_PROXY must list exact trusted proxy IPs or CIDRs; unrestricted trust is not allowed');
     }
   }
