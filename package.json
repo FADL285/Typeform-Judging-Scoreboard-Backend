@@ -1,0 +1,13 @@
+{
+  "name": "typeform-judging-scoreboard-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "setup": "npm --prefix backend ci && npm --prefix frontend ci",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "build": "npm --prefix frontend run build"
+  }
+}

@@ -27,7 +27,7 @@
 
 ## Environment Setup
 
-**Copy `.env.exmample` to .env and update the environment variables with your values**
+**Copy `.env.example` to .env and update the environment variables with your values**
 
 ```bash
   cp .env.example .env

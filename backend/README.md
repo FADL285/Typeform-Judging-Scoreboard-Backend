@@ -30,7 +30,8 @@
 **Clone the Application.**
 
 ```bash
-  git clone https://github.com/Typeform/js-api-client.git
+  git clone https://github.com/FADL285/Typeform-Judging-Scoreboard-Backend.git
+  cd Typeform-Judging-Scoreboard-Backend/backend
 ```
 
 **Install Dependencies.**
@@ -41,7 +42,7 @@
 
 ## Environment Setup
 
-**Copy `.env.exmample` to .env and update the environment variables with your values**
+**Copy `.env.example` to .env and update the environment variables with your values**
 
 ```bash
   cp .env.example .env
