@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .heading--primary {
+    @apply relative text-5xl capitalize;
+  }
+
+  .heading--primary::before {
+    content: "";
+    @apply w-1/5;
+    height: 2px;
+    background: #3e4b35;
+    position: absolute;
+    bottom: -1rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+@layer utilities {
+  .text-dynamic {
+    font-size: clamp(1.85rem, 3.5vw, 3rem);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 0.4rem;
+  height: 0.12rem;
+  background: black;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(241, 236, 227);
+  outline: 1px solid rgb(241, 236, 227);
+}
+
+::selection {
+  background: rgb(241, 236, 227);
+  color: rgb(38, 38, 39);
+  text-shadow: none;
+}
