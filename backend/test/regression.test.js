@@ -129,3 +129,72 @@ test('scoped IPv6 proxy addresses are rejected', () => {
   assert.throws(() => trustedProxies('fe80::1%eth0'));
   assert.throws(() => trustedProxies('fe80::1%eth0/64'));
 });
+
+test('shipped authentication examples fail closed, including legacy example values', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const example = await readFile(new URL('../.env.example', import.meta.url), 'utf8');
+  const { parse } = await import('dotenv');
+  const env = parse(example);
+  assert.throws(() => createAuth({ username: env.SCOREBOARD_USER, password: env.SCOREBOARD_PASSWORD, secret: env.SCOREBOARD_SESSION_SECRET }));
+  assert.throws(() => createAuth({ ...config, password: 'replace-with-a-long-private-password' }));
+  assert.throws(() => createAuth({ ...config, secret: 'replace-with-at-least-32-random-characters' }));
+  assert.throws(() => createAuth({ ...config, username: '   ' }));
+});
+
+test('cold workspace listing respects its total budget and stops dispatch after timeout', async () => {
+  let calls = 0;
+  const api = { forms: {
+    list: async () => ({ items: Array.from({ length: 40 }, (_, i) => ({ id: String(i) })) }),
+    get: async ({ uid }) => { calls++; return form(uid); },
+  } };
+  const fast = createHandlers(api, 'fixture', Date.now, { intervalMs: 1, requestTimeoutMs: 1000 });
+  assert.equal((await fast.getAllFormsDetails()).length, 40);
+  const bounded = createHandlers(api, 'fixture', Date.now, { intervalMs: 20, requestTimeoutMs: 35 });
+  await assert.rejects(bounded.getAllFormsDetails(), error => error.statusCode === 504);
+  const stopped = calls;
+  await new Promise(resolve => setTimeout(resolve, 65));
+  assert.equal(calls, stopped, 'expired workers must not dispatch more detail requests');
+});
+test('paginated aggregation has one total deadline, cancels calls, and releases slots for retry', async () => {
+  let pages = 0, aborted = 0, slow = true;
+  const api = {
+    forms: { list: async () => ({ items: [{ id: 'a' }] }), get: async () => form('a') },
+    responses: { list: async (_params, { signal }) => {
+      const page = ++pages;
+      if (!slow) return { items: [] };
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(resolve, 12);
+        signal.addEventListener('abort', () => { clearTimeout(timer); aborted++; reject(signal.reason); }, { once: true });
+      });
+      return { items: Array.from({ length: 750 }, (_, i) => ({ token: `${page}-${i}`, answers: [] })) };
+    } },
+  };
+  const handlers = createHandlers(api, 'fixture', Date.now, { intervalMs: 0, timeoutMs: 100, requestTimeoutMs: 35 });
+  await assert.rejects(handlers.getFormResponsesById('a'), error => error.statusCode === 504);
+  const stopped = pages; await new Promise(resolve => setTimeout(resolve, 40));
+  assert.equal(pages, stopped); assert.ok(aborted > 0);
+  slow = false;
+  assert.equal((await handlers.getFormResponsesById('a')).id, 'a');
+});
+test('production SDK forwards AbortSignal to a real loopback HTTP connection', async () => {
+  const { createServer } = await import('node:http');
+  const { createClient } = await import('@typeform/api-client');
+  let received;
+  const started = new Promise(resolve => { received = resolve; });
+  const server = createServer((req) => { received(); });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const controller = new AbortController();
+  try {
+    const client = createClient({ token: 'fixture-only', apiBaseUrl: `http://127.0.0.1:${server.address().port}`, signal: controller.signal, timeout: 1000 });
+    const result = client.forms.list({ workspaceId: 'fixture' });
+    const rejected = assert.rejects(result);
+    await started; controller.abort(); await rejected;
+  } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
+});
+
+test('patched proxy matching does not trust arbitrary IPv4 through broad mapped IPv6 subnets', async () => {
+  const { default: proxyaddr } = await import('proxy-addr');
+  assert.equal(proxyaddr.compile(['::ffff:10.0.0.0/8'])('203.0.113.9', 0), false);
+  assert.equal(proxyaddr.compile(['::/1'])('203.0.113.9', 0), false);
+  assert.equal(proxyaddr.compile(['10.0.0.0/8'])('10.1.2.3', 0), true);
+});

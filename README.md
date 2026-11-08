@@ -25,7 +25,7 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Configure `backend/.env` with a Typeform token and workspace ID, a scoreboard username, a private password of at least 12 characters, and a random signing secret of at least 32 characters. These values stay on the server. The default backend port is `3000`.
+The empty authentication examples deliberately fail startup. Replace every required value; the former public example password and signing secret are also rejected. Configure `backend/.env` with a Typeform token and workspace ID, a scoreboard username, a private password of at least 12 characters, and a random signing secret of at least 32 characters. These values stay on the server. The default backend port is `3000`.
 
 Configure `frontend/.env`:
 

@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "@/views/HomeView.vue";
-import { useAuthStore } from "@/stores/auth.js";
+import { requireSession } from "./guard.js";
 
 const routes = [
   {
@@ -45,16 +45,6 @@ const router = createRouter({
   },
 });
 
-router.beforeEach((to) => {
-  const authenticated = useAuthStore().isSessionValid();
-  if (to.meta.requiresAuth) {
-    if (!authenticated) {
-      return { name: "authentication" };
-    }
-  }
-  if (to.name === "authentication" && authenticated) {
-    return { name: "home" };
-  }
-});
+router.beforeEach(requireSession);
 
 export default router;

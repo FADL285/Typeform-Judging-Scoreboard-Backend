@@ -8,7 +8,7 @@
 
 - [x] Fetch Specific Workspace Forms <WORKSPACE_ID> `required`
 - [x] Bind each form name to a specific category.
-  > 💡 NOTE: Workspace forms are fetched once and then cached on the server, `make sure you create the forms before running the app on the server` - don't worry, you can update the forms at any time.
+  > 💡 NOTE: Workspace membership is fetched per request; form details are cached for five minutes. Use Refresh panels after changing membership.
 - [x] Fetch form responses and return each team score. `map each judge to his responses "Judge name is "`
 - [x] Fetch Form Variable if you need them
 
@@ -55,7 +55,13 @@
 
 TYPEFORM_PERSONAL_TOKEN="Your token here"
 TYPEFORM_WORKSPACE_ID="Your workspace ID here"
+# Required: fill these privately; blank values fail startup.
+SCOREBOARD_USER=
+SCOREBOARD_PASSWORD=
+SCOREBOARD_SESSION_SECRET=
 ```
+
+Set a nonblank username, a private password of at least 12 characters, and a random signing secret of at least 32 characters. The former public sample password/signing secret are rejected. Never reuse example credentials. Configure all five required variables before starting.
 
 ## Run the Application
 
@@ -69,11 +75,7 @@ To run this project run
 
 You can deploy the application on any hosting services platform
 
-**Free Hosting Platforms**:
-
-- [Heroku](https://heroku.com/)
-- [render](https://render.com/)
-- [cyclic](https://www.cyclic.sh/)
+For example, configure a Node service on [Render](https://render.com/) with `backend` as its root, `npm ci` for installation, and `npm start` to launch it. Provider plans and availability change; this is not a claim of free hosting. Configure all private authentication and Typeform environment variables on the service.
 
 ## API Reference
 
@@ -288,7 +290,11 @@ The first multiple_choice/picture_choice question in form metadata remains the c
 
 ## Supported workload and secure rollout
 
-The scoreboard supports up to 1,000 forms per workspace and 10,000 fetched responses / 8MB response data per form request. It rejects oversized requests explicitly without returning a partial ranking. At most two scoreboard aggregations and two Typeform calls run concurrently per process, with queued calls bounded and starts spaced 500ms apart. Calls have an eight-second deadline; the production SDK also aborts its underlying Axios connection at eight seconds. Rate-limit/upstream errors are surfaced for retry rather than retried in an unbounded loop. Form details larger than 1MB are rejected; metadata caching is bounded to 8MB.
+Every scoreboard aggregation has a **30-second total server budget**, including workspace membership, cold metadata loading, rate-limit waits, and all response pages. Each upstream call is limited to the smaller of eight seconds and its remaining aggregation budget. Expiry cancels dispatched HTTP requests, prevents queued/worker dispatch, releases slots, and returns HTTP 504 without partial lists or rankings. Retrying is explicit; no automatic unbounded retry runs.
+
+At most two aggregations and two upstream calls run concurrently per process. The queue is capped at 20 calls and starts remain spaced 500ms apart. Busy work returns 429/503. Hard safety ceilings are 1,000 workspace forms, 10,000 fetched responses and 8MB response data per aggregation; these are **size ceilings, not completion guarantees**. A cold catalog needs a workspace-list call plus one detail call per form: 40 forms cost at least 20 seconds before network latency, and a 1,000-form cold catalog cannot fit this budget. Use small event workspaces (roughly 40 lightweight forms cold), split larger workspaces, and retry a timeout only after addressing latency/size. Metadata caching helps subsequent requests but does not guarantee success. Every response page consumes the same total budget.
+
+Form details over 1MB are rejected and the metadata cache is capped at 8MB with a five-minute TTL. Membership remains fresh per aggregation. Production SDK requests carry an AbortSignal and remaining timeout to Axios. Frontend scoreboard requests wait at most 35 seconds, allowing the server's 504 to arrive; login remains limited to 15 seconds. Hosting proxy timeouts must exceed the server budget.
 
 This PR cannot retrofit authentication onto running legacy instances. Before exposing the updated service, put authentication at the edge or drain every old unauthenticated instance and switch frontend/backend together. Do not use a rolling mixed old/new deployment that still routes public traffic to legacy APIs. No deployment is performed by this PR.
 

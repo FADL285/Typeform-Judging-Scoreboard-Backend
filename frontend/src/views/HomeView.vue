@@ -33,6 +33,10 @@ load();
 <template>
   <main class="mb-8 mt-[5rem] text-center">
     <h3 class="heading--primary">Hackathon Panels</h3>
+    <button @click="load" :disabled="loading" class="mt-4 underline">Refresh panels</button>
+    <div v-if="loadError" role="alert" class="mt-8">
+      <p>{{ loadError }}</p><button @click="load" class="mt-4 underline">Try again</button>
+    </div>
     <section
       class="mt-14 grid grid-cols-1 items-center justify-center gap-5 px-4 md:grid-cols-2"
       v-if="competitions.length"
@@ -43,10 +47,7 @@ load();
         :competition="competition"
       />
     </section>
-    <div v-else-if="loadError" role="alert" class="mt-8">
-      <p>{{ loadError }}</p><button @click="load" class="mt-4 underline">Try again</button>
-    </div>
     <TheLoader v-else-if="loading" />
-    <p v-else class="mt-8">No panels available.</p>
+    <p v-else-if="!loadError" class="mt-8">No panels available.</p>
   </main>
 </template>

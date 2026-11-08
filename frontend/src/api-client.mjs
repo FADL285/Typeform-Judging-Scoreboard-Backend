@@ -1,6 +1,6 @@
 import { isValidSession } from './session.mjs';
 import { backendUrl, requestJson } from './request.mjs';
-export function createApiClient({ baseUrl, getSession, clearSession, fetchImpl = fetch, now = Date.now, timeoutMs = 15000, development = false }) {
+export function createApiClient({ baseUrl, getSession, clearSession, fetchImpl = fetch, now = Date.now, timeoutMs = 35000, development = false }) {
   function staleSessionError() {
     if (!isValidSession(getSession(), now())) {
       return Object.assign(new Error('Your session expired. Please sign in again.'), { status: 401 });

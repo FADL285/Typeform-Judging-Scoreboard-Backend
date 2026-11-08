@@ -1,7 +1,11 @@
 import { defineStore } from "pinia";
+import { useAuthStore } from "./auth.js";
 import { apiGet } from "@/api.js";
 import { questionTotal, teamTotal, rankTeams } from "../scoring.mjs";
 
+const text = value => typeof value === "string" || typeof value === "number" ? String(value) : "";
+const key = competition => text(competition.variables?.panel).trim() || text(competition.title);
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 export const useCompetitionStore = defineStore("competition", {
   state: () => ({
     competitions: [],
@@ -22,21 +26,20 @@ export const useCompetitionStore = defineStore("competition", {
   },
   actions: {
     async fetchCompetitions(isCurrent = () => true) {
-      // Check if competitions exists
-      if (this.competitions.length) return;
-
-      const result = (await apiGet("")).sort((c1, c2) => {
-        if (c1.variables?.panel)
-          return c1.variables.panel.localeCompare(c2.variables.panel);
-        else return c1.title.localeCompare(c2.title);
-      });
-      if (isCurrent()) this.competitions = result;
+      const auth = useAuthStore();
+      const session = auth.token;
+      // Refresh on every entry/retry; never retain a list across sessions.
+      const result = (await apiGet("")).sort((a, b) =>
+        compare(key(a), key(b)) || compare(text(a.title), text(b.title)) || compare(text(a.id), text(b.id)));
+      if (isCurrent() && auth.token === session && auth.isSessionValid()) this.competitions = result;
     },
     async fetchCompetition(id, isCurrent = () => true) {
+      const auth = useAuthStore();
+      const session = auth.token;
       this.competition = null;
 
       const result = await apiGet(encodeURIComponent(id));
-      if (isCurrent()) this.competition = result;
+      if (isCurrent() && auth.token === session && auth.isSessionValid()) this.competition = result;
     },
     getOverallQuestionRating(teamId, questionId) {
       return questionTotal(this.teamById(teamId), questionId);

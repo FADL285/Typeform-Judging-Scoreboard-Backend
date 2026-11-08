@@ -8,7 +8,7 @@
 
 - [x] Fetch Specific Workspace Forms <WORKSPACE_ID> `required`
 - [x] Bind each form name to a specific category.
-  > 💡 NOTE: Workspace forms are fetched once and then cached on the server, `make sure you create the forms before running the app on the server` - don't worry, you can update the forms at any time.
+  > 💡 NOTE: Workspace membership is fetched per request; form details are cached for five minutes. Use Refresh panels after changing membership.
 - [x] Fetch form responses and return each team score. `map each judge to his responses "Judge name is "`
 - [x] Fetch Form Variable if you need them
 
@@ -89,6 +89,16 @@ Teams retain the original event implementation: rank by descending SUM of all cr
 
 Run scoring regression checks with `npm test`.
 
-Backend URLs must use HTTPS; HTTP is accepted only for explicit Vite local development to localhost/127.0.0.1/::1. Login and scoreboard requests have a 15-second deadline. Denied session storage remains safely signed out; persistence must succeed before a new login is published, and superseded login responses are ignored.
+Backend URLs must use HTTPS; HTTP is accepted only for explicit Vite local development to localhost/127.0.0.1/::1. Login has a 15-second deadline; scoreboard requests have a 35-second deadline around the backend’s 30-second total aggregation budget. Server timeout/busy errors are shown explicitly and retry is manual. Denied session storage remains safely signed out; persistence must succeed before a new login is published, and superseded login responses are ignored.
 
 A competition with no rating criteria now fails explicitly instead of producing an all-zero ranking. Teams with no submissions retain the original zero-total behavior; no new disqualification or award policy is introduced.
+
+## Panel refresh and session visibility
+
+The panel list refreshes on every home-view entry and whenever **Refresh panels** or **Try again** is selected. It is not an indefinitely cached membership list. Failed refreshes show an error; previously loaded panels can remain visible until a successful refresh. Session-token and view-load guards prevent superseded results from publishing. Logout, expiry, and replacement sessions clear competition state.
+
+An expiry timer signs out locally and redirects protected views; returning to a visible tab rechecks the wall clock. Timer/listener cleanup occurs when the auth store is disposed, and old timers cannot clear newer sessions. Previously retained UI was not an authorization bypass: the backend always verifies expiry independently.
+
+## Netlify history-mode routes
+
+When using Netlify, set the project base directory to `frontend`, build with `npm run build`, and publish `dist`. Add `public/_redirects` containing `/* /index.html 200` (Vite copies it to dist), or configure the equivalent Netlify rewrite. This serves SPA routes such as `/authentication` and `/panels/:id` on refresh. Vercel uses the existing `vercel.json` rule instead.
