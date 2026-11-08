@@ -81,9 +81,15 @@ This repository continues the existing backend repository, created on **14 Octob
 
 The new directory moves and merge are dated when performed. No original commits are rebased, squashed, cherry-picked, or backdated. Git can follow file moves using `git log --follow -- frontend/src/App.vue`, for example; directory-scoped history views may require following renames to see older paths.
 
-**Merge this PR using “Create a merge commit”. Do not squash or rebase it**, because importing both histories is an explicit requirement.
+The consolidation was merged with a merge commit, and the existing backend repository is now named `Typeform-Judging-Scoreboard`. Its original creation date and both imported histories are preserved.
 
-After the PR is merged and deployment roots have been adjusted, rename the existing backend repository to `Typeform-Judging-Scoreboard`, update profile links, and archive the former frontend repository with a pointer here. Historical PR discussions remain in their original repositories; Git history import does not move those discussions, stars, or forks. The frontend repository must not be deleted.
+Update existing local clones to the current SSH remote:
+
+```sh
+git remote set-url origin git@github.com:FADL285/Typeform-Judging-Scoreboard.git
+```
+
+Hosting root-directory updates and verification are separate transition steps; see [Deployment after consolidation](#deployment-after-consolidation). After confirming hosting no longer depends on the standalone frontend repository, retain it as an archive with a pointer here. Historical PR discussions remain in their original repositories; Git history import does not move those discussions, stars, or forks. The frontend repository must not be deleted.
 
 ## Author
 
