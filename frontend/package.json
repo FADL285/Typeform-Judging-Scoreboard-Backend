@@ -1,0 +1,47 @@
+{
+  "name": "typeform-judging-scoreboard",
+  "version": "0.0.0",
+  "description": "Fetch responses from Typeform and display it in a scoreboard - it fetch workspace forms and set each form as card which has Teams and display the total rating score.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
+    "test": "node --test test/*.test.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FADL285/Typeform-Judging-Scoreboard-Frontend.git"
+  },
+  "keywords": [
+    "typeform",
+    "judging",
+    "score",
+    "board"
+  ],
+  "author": "Mohamed Fadl <Mohamed.Fadl2852@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FADL285/Typeform-Judging-Scoreboard-Frontend/issues"
+  },
+  "homepage": "https://github.com/FADL285/Typeform-Judging-Scoreboard-Frontend#readme",
+  "dependencies": {
+    "@vueuse/core": "^9.2.0",
+    "pinia": "^2.0.21",
+    "vue": "^3.5.45",
+    "vue-router": "^4.1.5"
+  },
+  "devDependencies": {
+    "@rushstack/eslint-patch": "^1.1.4",
+    "@vitejs/plugin-vue": "^3.0.3",
+    "@vue/eslint-config-prettier": "^7.0.0",
+    "autoprefixer": "^10.4.12",
+    "eslint": "^8.22.0",
+    "eslint-plugin-vue": "^9.3.0",
+    "postcss": "^8.5.32",
+    "prettier": "^2.7.1",
+    "prettier-plugin-tailwindcss": "^0.1.13",
+    "tailwindcss": "^3.1.8",
+    "vite": "^3.2.11"
+  }
+}

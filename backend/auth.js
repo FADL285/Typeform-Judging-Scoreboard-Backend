@@ -4,7 +4,10 @@ const digest = value => createHash('sha256').update(String(value)).digest();
 const equal = (a, b) => timingSafeEqual(digest(a), digest(b));
 
 export function createAuth({ username, password, secret, now = Date.now }) {
-  if (!username || !password || password.length < 12 || !secret || secret.length < 32) {
+  const configured = typeof username === 'string' && username.trim()
+    && typeof password === 'string' && password.trim().length >= 12
+    && typeof secret === 'string' && secret.trim().length >= 32;
+  if (!configured || password === 'replace-with-a-long-private-password' || secret === 'replace-with-at-least-32-random-characters') {
     throw new Error('Set SCOREBOARD_USER, SCOREBOARD_PASSWORD (12+ characters), and SCOREBOARD_SESSION_SECRET (32+ characters)');
   }
   const attempts = new Map();

@@ -1,294 +1,90 @@
-<div align="center">
-    <h1>Typeform - Judging Scoreboard - Back-End</h1>
-    <img src="https://user-images.githubusercontent.com/53804570/196001680-ce93ed21-9302-483f-a6f6-9b5ea1ea444f.gif" alt="Logo" />
-    <p>Fetch responses from Typeform and display it in a score board - it fetch workspace forms and set each form as card which has Teams (multiple_choice or picture_choice) and display the total rating score.</p>
-</div>
+# Typeform Judging Scoreboard
 
-## What the application covers?
+A Vue scoreboard and Express API for competition judging through Typeform. Judges submit team ratings in Typeform; the dashboard presents competition categories, team totals, and rankings.
 
-- [x] Fetch Specific Workspace Forms <WORKSPACE_ID> `required`
-- [x] Bind each form name to a specific category.
-  > 💡 NOTE: Workspace forms are fetched once and then cached on the server, `make sure you create the forms before running the app on the server` - don't worry, you can update the forms at any time.
-- [x] Fetch form responses and return each team score. `map each judge to his responses "Judge name is "`
-- [x] Fetch Form Variable if you need them
+Originally built in 2022 and used for IEEE Mansoura Branch's IEEE VICTORIS and university NASA Space Apps events. Subsequent maintenance adds server-side authentication, bounded upstream requests, and regression coverage while preserving the original sum-based scoring rules.
 
-## Typeform Qurstion Structure
+![Scoreboard demonstration](https://user-images.githubusercontent.com/53804570/196001680-ce93ed21-9302-483f-a6f6-9b5ea1ea444f.gif)
 
-| Question          | Type                                  |
-| :---------------- | :------------------------------------ |
-| `choose a team`   | `multiple_choice` or `picture_choice` |
-| `rating question` | `rating`                              |
+## Structure
 
-> This is a [demo team evaluation form](https://form.typeform.com/to/A9z6bGlu#judge=Mohamed%20Fadl), take a look at it.
+| Directory | Responsibility |
+| --- | --- |
+| [`frontend/`](frontend/) | Vue 3, Pinia, Vue Router, Tailwind CSS, Vite |
+| [`backend/`](backend/) | Node.js, Express, Typeform API integration and signed sessions |
 
-## Requirements to run it locally
+The applications keep separate dependencies and lockfiles. There is no root dependency installation and no workspace migration.
 
-- [Node.js](https://nodejs.org/en/)
+## Run locally
 
-## Installation
+Use Node.js 22 and npm. From the repository root:
 
-**Clone the Application.**
-
-```bash
-  git clone https://github.com/Typeform/js-api-client.git
+```sh
+npm run setup
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
 ```
 
-**Install Dependencies.**
+The empty authentication examples deliberately fail startup. Replace every required value; the former public example password and signing secret are also rejected. Configure `backend/.env` with a Typeform token and workspace ID, a scoreboard username, a private password of at least 12 characters, and a random signing secret of at least 32 characters. These values stay on the server. The default backend port is `3000`.
 
-```bash
-  npm install
+Configure `frontend/.env`:
+
+```dotenv
+VITE_APP_NAME="Judging Scoreboard"
+VITE_BASE_URL="http://localhost:3000"
 ```
 
-## Environment Setup
+Start each application in a separate terminal:
 
-**Copy `.env.exmample` to .env and update the environment variables with your values**
-
-```bash
-  cp .env.example .env
+```sh
+npm run dev:backend
 ```
 
-**`.env` Structure**
-
-```bash
-# App Configuration
-
-TYPEFORM_PERSONAL_TOKEN="Your token here"
-TYPEFORM_WORKSPACE_ID="Your workspace ID here"
+```sh
+npm run dev:frontend
 ```
 
-## Run the Application
+Open the URL printed by Vite and sign in with the backend scoreboard credentials. Real scoreboard data requires a configured Typeform workspace; the automated tests use fixtures and do not require credentials.
 
-To run this project run
+## Verify
 
-```bash
-  npm run start
+```sh
+npm test
+npm run build
 ```
 
-## Deploy
+The root commands run both applications' existing regression suites and build the frontend. CI repeats these checks on pushes and pull requests.
 
-You can deploy the application on any hosting services platform
+## Scoring and authentication
 
-**Free Hosting Platforms**:
+- Teams rank by descending **sum** of criterion ratings across submitted judging responses.
+- Cards separately display the average per judging response. Tied sums preserve input order.
+- Missing or invalid criterion ratings produce an incomplete-data error; they are not silently scored as zero.
+- The backend signs eight-hour bearer sessions. Typeform credentials, passwords, and signing secrets must never be placed in `VITE_*` variables.
 
-- [Heroku](https://heroku.com/)
-- [render](https://render.com/)
-- [cyclic](https://www.cyclic.sh/)
+Read the [frontend notes](frontend/README.md#authentication-and-score-ordering) and [backend API and security notes](backend/README.md#server-side-scoreboard-authentication) for details and workload limits.
 
-## API Reference
+## Deployment after consolidation
 
-#### Get all Forms in the Workspace (Form Id, Title, teams, and variables)
+The layout change requires hosting configuration updates before deploying:
 
-```http
-  GET /api
-```
+- **Frontend:** use `frontend` as the hosting project's root directory, `npm ci` as the install command, `npm run build` as the build command, and `dist` as the output directory. The SPA rewrite lives in `frontend/vercel.json`.
+- **Backend:** use `backend` as the service root, `npm ci` as the build/install command, and `npm start` as the start command. Configure all private environment values on that service. `PORT` is supplied by the host where applicable.
+- Set the production `VITE_BASE_URL` to the HTTPS backend origin. Remove legacy `VITE_AUTH_*` values and rotate any secrets exposed by old client builds.
+- Switch both applications together after draining unauthenticated legacy instances; see the backend rollout notes. The monorepo does not deploy either application automatically.
 
-#### Response Example
+No live demo is advertised until hosting and both deployed applications have been verified. The previous Render service is unavailable; local checks do not establish deployment readiness.
 
-```json
-{
-  "data": [
-    {
-      "id": "KaxNsOxB",
-      "title": "Machine Learning",
-      "teams": [
-        {
-          "id": "71KhmFtvEsYZ",
-          "title": "Team_1 Name"
-        },
-        {
-          "id": "71KhmF2fEsYZ",
-          "title": "Team_2 Name"
-        },
-        {
-          "id": "43KhmFtvEsYZ",
-          "title": "Team_3 Name"
-        }
-      ],
-      "variables": {
-        "color": "blue",
-        "panel": "Panel 1"
-      }
-    },
-    {
-      "id": "KaFadlXB",
-      "title": "Graphic Design",
-      "teams": [
-        {
-          "id": "71KhmFtvWfYZ",
-          "title": "Team_1 Name"
-        },
-        {
-          "id": "71KhmFtXasYZ",
-          "title": "Team_2 Name"
-        },
-        {
-          "id": "71KhFMtvEsYZ",
-          "title": "Team_3 Name"
-        }
-      ],
-      "variables": {
-        "color": "black",
-        "panel": "Panel 2"
-      }
-    }
-  ],
-  "statusCode": 200
-}
-```
+## History and repository transition
 
-#### Get form `category` teams with there scores ( also return rating questions and it's variables )
+This repository continues the existing backend repository, created on **14 October 2022**. The frontend repository was created on **15 October 2022**. Both original default-branch histories are ancestors of the consolidation commit, with their original commit IDs, authors, author dates, and committer dates unchanged.
 
-```http
-  GET /api/${formId}
-```
+The new directory moves and merge are dated when performed. No original commits are rebased, squashed, cherry-picked, or backdated. Git can follow file moves using `git log --follow -- frontend/src/App.vue`, for example; directory-scoped history views may require following renames to see older paths.
 
-| Parameter | Type     | Description                         |
-| :-------- | :------- | :---------------------------------- |
-| `formId`  | `string` | **Required**. Id of form `Category` |
+**Merge this PR using “Create a merge commit”. Do not squash or rebase it**, because importing both histories is an explicit requirement.
 
-#### Response Example
+After the PR is merged and deployment roots have been adjusted, rename the existing backend repository to `Typeform-Judging-Scoreboard`, update profile links, and archive the former frontend repository with a pointer here. Historical PR discussions remain in their original repositories; Git history import does not move those discussions, stars, or forks. The frontend repository must not be deleted.
 
-```json
-{
-  "data": {
-    "id": "VYxaDyQi",
-    "title": "AI/ML & Data Science",
-    "teams": [
-      {
-        "id": "yyxxwWqDjbqL",
-        "title": "AstroCodeX",
-        "responses": [
-          {
-            "judge": "Mohamed Fadl",
-            "answers": [
-              {
-                "id": "K0iweO6dUa0J",
-                "rating": 9
-              },
-              {
-                "id": "paJyPOZUg2iT",
-                "rating": 8
-              },
-              {
-                "id": "9L0zlEV4QU0w",
-                "rating": 6
-              }
-            ]
-          },
-          {
-            "judge": "Ayman Ezzat",
-            "answers": [
-              {
-                "id": "K0iweO6dUa0J",
-                "rating": 8
-              },
-              {
-                "id": "paJyPOZUg2iT",
-                "rating": 7
-              },
-              {
-                "id": "9L0zlEV4QU0w",
-                "rating": 7
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "Z1vfoFNAa73Z",
-        "title": "EDAD",
-        "responses": [
-          {
-            "judge": "Mohamed Fadl",
-            "answers": [
-              {
-                "id": "K0iweO6dUa0J",
-                "rating": 6
-              },
-              {
-                "id": "paJyPOZUg2iT",
-                "rating": 7
-              },
-              {
-                "id": "9L0zlEV4QU0w",
-                "rating": 8
-              }
-            ]
-          },
-          {
-            "judge": "Ayman Ezzat",
-            "answers": [
-              {
-                "id": "K0iweO6dUa0J",
-                "rating": 9
-              },
-              {
-                "id": "paJyPOZUg2iT",
-                "rating": 7
-              },
-              {
-                "id": "9L0zlEV4QU0w",
-                "rating": 6
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "ratingQuestions": [
-      {
-        "id": "K0iweO6dUa0J",
-        "title": "Impact",
-        "max": 10
-      },
-      {
-        "id": "paJyPOZUg2iT",
-        "title": "Completeness",
-        "max": 10
-      },
-      {
-        "id": "9L0zlEV4QU0w",
-        "title": "Functionality",
-        "max": 10
-      }
-    ],
-    "variables": {
-      "color": "blue",
-      "panel": "Panel 1"
-    }
-  },
-  "statusCode": 200
-}
-```
+## Author
 
-## Acknowledgements
-
-- [Typeform API js client](https://github.com/Typeform/js-api-client)
-
-## Authors
-
-- [@FADL285](https://www.github.com/FADL285)
-
-## License
-
-[ISC](https://choosealicense.com/licenses/isc/)
-
-## Server-side scoreboard authentication
-
-All `/api` routes require a server-signed bearer session token. Configure `SCOREBOARD_USER`, a private `SCOREBOARD_PASSWORD` of at least 12 characters, and a random `SCOREBOARD_SESSION_SECRET` of at least 32 characters on the backend only. Login via `POST /api/auth` with JSON `{ "username": "...", "password": "..." }`, then send the returned token in `Authorization: Bearer ...`. Tokens expire after eight hours. Rotate the session secret to invalidate all tokens. Use HTTPS.
-
-The paired frontend must be updated together. Remove all `VITE_AUTH_*` deployment variables: frontend environment variables are public build configuration. Existing shared passwords exposed by old client builds must be replaced before deployment. This is a single shared scoreboard login, not individual judge accounts. Login throttling is per process/IP; deployments with multiple processes need a shared limiter or edge control.
-
-Form details are cached for five minutes with an 8MB cache budget; workspace membership is fetched fresh per request and concurrent in-flight list refreshes are coalesced. Each request builds its own response data.
-
-For reverse-proxy deployments, set optional `SCOREBOARD_TRUST_PROXY` to an explicit comma-separated list of trusted proxy IPs/CIDRs that matches the actual network topology (for example `127.0.0.1/32` only for a local proxy). Trust is disabled by default; never trust arbitrary forwarding headers or use blanket `true`. Configure the proxy to overwrite client forwarding headers.
-
-The first multiple_choice/picture_choice question in form metadata remains the configured team selector; response answers are matched to that exact question ID, not their response ordering.
-
-## Supported workload and secure rollout
-
-The scoreboard supports up to 1,000 forms per workspace and 10,000 fetched responses / 8MB response data per form request. It rejects oversized requests explicitly without returning a partial ranking. At most two scoreboard aggregations and two Typeform calls run concurrently per process, with queued calls bounded and starts spaced 500ms apart. Calls have an eight-second deadline; the production SDK also aborts its underlying Axios connection at eight seconds. Rate-limit/upstream errors are surfaced for retry rather than retried in an unbounded loop. Form details larger than 1MB are rejected; metadata caching is bounded to 8MB.
-
-This PR cannot retrofit authentication onto running legacy instances. Before exposing the updated service, put authentication at the edge or drain every old unauthenticated instance and switch frontend/backend together. Do not use a rolling mixed old/new deployment that still routes public traffic to legacy APIs. No deployment is performed by this PR.
-
-The previous `getFormPref` export is retained for compatibility; no in-repository consumer was found. It now applies the same current-workspace authorization before returning metadata.
+[Mohamed Fadl](https://github.com/FADL285)

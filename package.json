@@ -1,37 +1,13 @@
 {
-  "name": "typeform-judging-scoreboard",
+  "name": "typeform-judging-scoreboard-monorepo",
   "version": "1.0.0",
-  "description": "Fetch responses from Typeform and display it in a scoreboard - it fetch workspace forms and set each form as card which has Teams (multiple_choice or picture_choice) and display the total rating score.",
-  "main": "app.js",
-  "type": "module",
+  "private": true,
   "scripts": {
-    "dev": "nodemon app.js",
-    "start": "node app.js",
-    "test": "node --test test/*.test.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/FADL285/Typeform-Judging-Scoreboard-Backend.git"
-  },
-  "keywords": [
-    "typeform",
-    "judging",
-    "score",
-    "board"
-  ],
-  "author": "Mohamed Fadl <Mohamed.Fadl2852@gmail.com>",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/FADL285/Typeform-Judging-Scoreboard-Backend/issues"
-  },
-  "homepage": "https://github.com/FADL285/Typeform-Judging-Scoreboard-Backend#readme",
-  "dependencies": {
-    "@typeform/api-client": "^1.7.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.2",
-    "express": "^4.18.1"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.20"
+    "setup": "npm --prefix backend ci && npm --prefix frontend ci",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "build": "npm --prefix frontend run build"
   }
 }
