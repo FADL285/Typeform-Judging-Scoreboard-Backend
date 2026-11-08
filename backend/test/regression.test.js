@@ -185,10 +185,11 @@ test('production SDK forwards AbortSignal to a real loopback HTTP connection', a
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const controller = new AbortController();
   try {
-    const client = createClient({ token: 'fixture-only', apiBaseUrl: `http://127.0.0.1:${server.address().port}`, signal: controller.signal, timeout: 1000 });
+    const client = createClient({ token: 'fixture-only', apiBaseUrl: `http://127.0.0.1:${server.address().port}`, signal: controller.signal, timeout: 1000, proxy: false });
     const result = client.forms.list({ workspaceId: 'fixture' });
-    const rejected = assert.rejects(result);
-    await started; controller.abort(); await rejected;
+    await Promise.race([started, result.then(() => { throw new Error('SDK request completed before reaching server'); })]);
+    controller.abort();
+    await assert.rejects(result);
   } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
 });
 
