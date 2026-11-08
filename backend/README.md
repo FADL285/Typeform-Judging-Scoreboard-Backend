@@ -30,8 +30,8 @@
 **Clone the Application.**
 
 ```bash
-  git clone https://github.com/FADL285/Typeform-Judging-Scoreboard-Backend.git
-  cd Typeform-Judging-Scoreboard-Backend/backend
+  git clone https://github.com/FADL285/Typeform-Judging-Scoreboard.git
+  cd Typeform-Judging-Scoreboard/backend
 ```
 
 **Install Dependencies.**
